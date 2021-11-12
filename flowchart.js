@@ -17,7 +17,8 @@ module.exports = function (RED) {
                 align-content: space-around;
                 justify-items: center;
                 justify-content: space-around;
-                align-items: center;               
+                align-items: center;
+				user-select:none;               
             }
             .flowchart-item-wrapper{
                 text-align:center;
@@ -77,9 +78,9 @@ module.exports = function (RED) {
                 {id:'item_0',position:'g-0-1',shape:'pill',color:'red',label:'MAJA',value:'Something',icon:'fa-home fa-2x',order:['label','value','icon']},
                 {id:'item_1',position:'g-2-2',shape:'square',color:'orange',label:'KODU',value:'Here I am',icon:'wi-wu-cloudy fa-2x',order:['icon','label','value']},
                 {id:'item_2',position:'g-2-0',shape:'square',color:'blue',label:'TÄNAV',value:'anything',icon:'home',order:['label','icon','value']},
-                {id:'item_3',position:'g-1-0',shape:'round',size:50,color:'darkgray',label:'',value:'',icon:'fa-gear fa-2x',order:['label','icon','value']},
+                {id:'item_3',position:'g-1-0',shape:'round',size:35,color:'darkgray',label:'',value:'',icon:'fa-gear fa-2x',order:['label','icon','value']},
                 {id:'item_4',position:'g-1-1',shape:'round',size: 65,color:'yellow',label:'COMMON',value:'',icon:'fa-gears fa-2x',order:['label','icon','value']},
-                {id:'item_5',position:'g-1-2',shape:'round',size:50,color:'gray',label:'',value:'',icon:'fa-gear fa-2x',order:['label','icon','value']},
+                {id:'item_5',position:'g-1-2',shape:'round',size:35,color:'gray',label:'',value:'',icon:'fa-gear fa-2x',order:['label','icon','value']},
             ]
                 
                 done = ui.addWidget({
@@ -216,8 +217,7 @@ module.exports = function (RED) {
                                     }
                                     if(el == 'icon'){
                                         if(item.icon && item.icon != ""){
-											let icontype = getIconType(item.icon)
-											console.log(item.icon,icontype)
+											let icontype = getIconType(item.icon)											
 											switch(icontype){
 												case 'wi':{
 													$('<i>', {class:icontype +' wi-fw '+item.icon}).appendTo($('<span>')).appendTo(itemContent)
@@ -228,10 +228,9 @@ module.exports = function (RED) {
 													break
 												}
 												default:{
-													($('<span>', {class:'material-icons'})).text(item.icon).appendTo(itemContent)
+													($('<span>', {class:'material-icons'})).text(item.icon).css('font-size','2em').appendTo(itemContent)
 												}
 											}
-                                            //$('<i>', {class:item.icon}).appendTo($('<span>')).appendTo(itemContent)
                                         }
                                     }
                                 })                                
@@ -239,13 +238,11 @@ module.exports = function (RED) {
                         }
 
 						const getIconType = function (icon) {
-							var t = ""
-							
+							var t = ""							
 							var fa = /^fa-/gi;
 							var wi = /^wi-/gi;
 							var mi = /^mi-/gi;
-							var icf = /^iconify-/gi;
-		
+							var icf = /^iconify-/gi;		
 							if (fa.test(icon)) {
 								t = 'fa';
 							} else if (wi.test(icon)) {
