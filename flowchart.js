@@ -23,8 +23,10 @@ module.exports = function (RED) {
             .flowchart-item-wrapper{
                 text-align:center;
             }
+			
             .flowchart-item {
                 display: flex;
+				position: relative;
                 flex-direction:column;       
                 border: 4px solid;        
                 justify-content: center;
@@ -32,6 +34,28 @@ module.exports = function (RED) {
 				padding: 1em;
                 background: var(--nr-dashboard-widgetBgndColor);
             }
+			.flowchart-item.text-shadow > span{
+				position: relative;
+				z-index:2;
+			}
+			.flowchart-item.text-shadow > span::after {
+				content: '';
+				position: absolute;
+				left: 0;
+				right: 0;
+				top: 0;
+				bottom: 0;
+				background: black;
+				opacity: 0.4;
+				z-index: -1;
+				filter: blur(5px);
+				transform: scale(1.5);
+            }
+			.flowchart-item.background {
+				background-repeat: no-repeat;
+				background-position: center;
+				background-size: contain;
+            }			
             .flowchart-item.pill {
                 border-radius: 10vh;
             }
@@ -77,9 +101,9 @@ module.exports = function (RED) {
                 config.items = [
                 {id:'item_0',position:'g-0-1',shape:'pill',color:'red',label:'MAJA',value:'Something',icon:'fa-home fa-2x',order:['label','value','icon']},
                 {id:'item_1',position:'g-2-2',shape:'square',color:'orange',label:'KODU',value:'Here I am',icon:'wi-wu-cloudy fa-2x',order:['icon','label','value']},
-                {id:'item_2',position:'g-2-0',shape:'square',color:'blue',label:'TÄNAV',value:'anything',icon:'home',order:['label','icon','value']},
-                {id:'item_3',position:'g-1-0',shape:'round',size:35,color:'darkgray',label:'',value:'',icon:'fa-gear fa-2x',order:['label','icon','value']},
-                {id:'item_4',position:'g-1-1',shape:'round',size: 65,color:'yellow',label:'COMMON',value:'',icon:'fa-gears fa-2x',order:['label','icon','value']},
+                {id:'item_2',position:'g-2-0',shape:'round',size: 100,color:'blue',label:'TÄNAV',value:'anything',icon:'home',background:'/images/home.png',order:['label','icon','value']},
+                {id:'item_3',position:'g-1-0',shape:'round',size:35,color:'darkgray',label:'',value:'',icon:'',background:'/images/gridpower.png',order:['label','icon','value']},
+                {id:'item_4',position:'g-1-1',shape:'round',size: 65,color:'yellow',label:'SOLAR',value:'250kW',icon:'',background:'/images/solarpanel.png',order:['label','icon','value']},
                 {id:'item_5',position:'g-1-2',shape:'round',size:35,color:'gray',label:'',value:'',icon:'fa-gear fa-2x',order:['label','icon','value']},
             ]
                 
@@ -196,13 +220,18 @@ module.exports = function (RED) {
                                 .css('grid-area',item.position)
                                 .appendTo("#flowchart_" + $scope.unique)
 
-                                let itemContent = $('<div>', {class: 'flowchart-item '+item.shape+''})
-                                .css('border-color',item.color)
+                                let itemContent = $('<div>', {class: 'flowchart-item '+item.shape+''})                                
                                 .appendTo(chartitem)
 
+								let style = {'border-color':item.color}
 								if(item.shape =='round'){
-									itemContent.attr({style:'--size:'+item.size+'; border-color:'+item.color+';'}); 
+									style['--size'] = item.size									
 								}
+								if(item.background && item.background !=''){
+									style['background-image'] = 'url('+item.background+')'
+									itemContent.addClass('background text-shadow')									
+								}
+								itemContent.css(style); 
 
                                 item.order.map(el => {
                                     if(el == 'label'){
