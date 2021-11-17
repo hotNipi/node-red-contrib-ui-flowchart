@@ -1,5 +1,4 @@
 var path = require('path');
-const { createBrotliDecompress } = require('zlib');
 module.exports = function (RED) {
 	function HTML(config) {
 
@@ -99,13 +98,63 @@ module.exports = function (RED) {
                 config.matrix = {width:3,height:3}
 
                 config.items = [
-                {id:'item_0',position:'g-0-1',shape:'pill',color:'red',label:'MAJA',value:'Something',icon:'fa-home fa-2x',order:['label','value','icon']},
-                {id:'item_1',position:'g-2-2',shape:'square',color:'orange',label:'KODU',value:'Here I am',icon:'wi-wu-cloudy fa-2x',order:['icon','label','value']},
-                {id:'item_2',position:'g-2-0',shape:'round',size: 100,color:'blue',label:'TÄNAV',value:'anything',icon:'home',background:'/images/home.png',order:['label','icon','value']},
-                {id:'item_3',position:'g-1-0',shape:'round',size:35,color:'darkgray',label:'',value:'',icon:'',background:'/images/gridpower.png',order:['label','icon','value']},
-                {id:'item_4',position:'g-1-1',shape:'round',size: 65,color:'yellow',label:'SOLAR',value:'250kW',icon:'',background:'/images/solarpanel.png',order:['label','icon','value']},
-                {id:'item_5',position:'g-1-2',shape:'round',size:35,color:'gray',label:'',value:'',icon:'fa-gear fa-2x',order:['label','icon','value']},
-            ]
+					{id:'item_0',position:'g-0-1',shape:'pill',color:'red',label:'MAJA',value:'Something',icon:'fa-home fa-2x',order:['label','value','icon']},
+					{id:'item_1',position:'g-2-2',shape:'square',color:'orange',label:'KODU',value:'Here I am',icon:'wi-wu-cloudy fa-2x',order:['icon','label','value']},
+					{id:'item_2',position:'g-2-0',shape:'round',size: 100,color:'blue',label:'TÄNAV',value:'anything',icon:'home',background:'/images/home.png',order:['label','icon','value']},
+					{id:'item_3',position:'g-1-0',shape:'round',size:35,color:'darkgray',label:'',value:'',icon:'',background:'/images/gridpower.png',order:['label','icon','value']},
+					{id:'item_4',position:'g-1-1',shape:'round',size: 65,color:'yellow',label:'SOLAR',value:'250kW',icon:'',background:'/images/solarpanel.png',order:['label','icon','value']},
+					{id:'item_5',position:'g-1-2',shape:'round',size:35,color:'gray',label:'',value:'',icon:'fa-gear fa-2x',order:['label','icon','value']},
+				]
+				config.lines = [
+					{
+						id:'line_0',
+						definition:{
+							from:'g-2-2',
+							to:'g-1-0'
+						},
+						options:{ 
+							color:'red',
+							gradient: { 
+								startColor: 'red',
+								endColor: 'red'
+							},
+							size: 3,
+							dash:{
+								len: 16,
+								gap: 2,
+								animation: true
+							},
+							startSocketGravity:50,
+							endSocketGravity:50,
+							startSocket:'left',
+							endSocket:'bottom'
+						}
+					},
+					{
+						id:'line_1',
+						definition:{
+							from:'g-0-1',
+							to:'g-1-1'
+						},
+						options:{ 
+							color:'yellow',
+							gradient: { 
+								startColor: 'yellow',
+								endColor: 'yellow'
+							},
+							size: 3,
+							dash:{
+								len: 16,
+								gap: 2,
+								animation: true
+							},
+							startSocketGravity:50,
+							endSocketGravity:50,
+							startSocket:'right',
+							endSocket:'right'
+						}
+					}
+				]
                 
                 done = ui.addWidget({
 					node: node,
@@ -118,6 +167,7 @@ module.exports = function (RED) {
 					emitOnlyNewValues: false,
 					forwardInputMessages: true,
 					storeFrontEndInputAsState: true,
+					
 
 					beforeEmit: function (msg) {
 						var fem = {}
@@ -149,13 +199,13 @@ module.exports = function (RED) {
 						$scope.inited = false
 
                         $scope.init = function (p) {
-                            console.log(p)							
+                            //console.log(p)							
 							if(p.config){
-								if (!document.getElementById('anseki-leader-line-1-0-5')) {	
+								if (!document.getElementById('leader-line-1-0-5')) {	
                                     const cb = function(){
                                         update(p)
                                     }							
-									loadScript('anseki-leader-line-1-0-5', 'ui-flowchart/js/leader-line.min.js',cb)
+									loadScript('leader-line-1-0-5', 'ui-flowchart/js/leader-line.min.js',cb)
 								}
                                 else{
                                     update(p)
@@ -163,10 +213,13 @@ module.exports = function (RED) {
 							}							
 						}
 
+						
+
                         $scope.$watch('msg', function (msg) {
 							if (!msg) {
 								return;
 							}
+							console.log(msg)
 							if ($scope.inited == false) {
 								$scope.waitingmessage = msg
 								return
@@ -176,9 +229,13 @@ module.exports = function (RED) {
 						$scope.$on('$destroy', function () {
 							if ($scope.timeout != null) {
 								clearTimeout($scope.timeout)
-								$scope.timeout = null
-							}							
+								$scope.timeout = null								
+							}
+							destroyLines()									
 						});
+
+
+						
 
                         const update = function (data) {
 							let main = document.getElementById("flowchart_" + $scope.unique);
@@ -188,12 +245,13 @@ module.exports = function (RED) {
 							}
 							$scope.inited = true
 							$scope.timeout = null
-                            if (data.config) {
-                                console.log(data.config)
+                            if (data.config) {								
                                 $scope.matrix = data.config.matrix
                                 $scope.items = data.config.items
+								$scope.lineDefinitions = data.config.lines
                                 updateContainers()
                                 createItems()
+								createLines()
 
                             }
                             if ($scope.waitingmessage != null) {
@@ -214,9 +272,105 @@ module.exports = function (RED) {
 								//update what ever the payload carry
 							}
                         }
+
+						const destroyLines = function(){
+							$scope.lines.forEach(line => {
+								try{
+									if(line && line.line){
+										line.line.remove()
+									}
+									
+								}
+								catch(e){
+									console.log(e)
+								}
+							})
+							$scope.lines = []
+						}
+						const hideLines = function(){
+							$scope.lines.forEach(line => {
+								try{
+									if(line && line.line){
+										line.line.hide()
+									}
+								}
+								catch(e){
+									console.log(e)
+								}
+							})
+						}
+
+						const createLines = function(){
+							$scope.lines = []
+							$scope.lineDefinitions.forEach(el => {
+								let line = {
+									id:el.id,
+									startId:"fi_" + $scope.unique+"_"+el.definition.from,
+									endId:"fi_" + $scope.unique+"_"+el.definition.to,
+									options:el.options,
+									line:null
+								}
+								$scope.lines.push(line)
+								
+							})
+							setTimeout(drawLines,1)
+						}
+
+						const drawLines = function(){
+							if(underCover()){
+								setTimeout(drawLines,40)
+								return
+							}
+							if($scope.lines[0].line != null){
+								return
+							}
+							$scope.lines.forEach(el => {
+								console.log('drawLine ',el)
+								try{
+									el.line = new LeaderLine(document.getElementById(el.startId),document.getElementById(el.endId),el.options)
+								}
+								catch(e){
+									console.log(e)
+									el.line = null
+								}
+							})
+							fixPosition()
+							setTimeout(watchDestroy,100)
+						}
+						const watchDestroy = function(){							
+							var destroyer = ".node-red-ui--notabs"
+							if(angular.element(destroyer).is(':visible') == true){
+								setTimeout(watchDestroy,100)
+								return
+							}
+							console.log("watcher started")
+							var unWatch = $scope.$watch(function() { return angular.element(destroyer).is(':visible') }, function() {
+								hideLines()
+								unWatch()
+							});
+						}
+
+						const underCover = function(){
+							var el = ".node-red-ui--notabs"
+							return (angular.element(el).is(':visible') == true)							
+						}
+
+						const fixPosition = function() {							
+							$scope.lines.forEach(e => {
+								try{
+									e.line.position()
+								} 
+								catch(e){
+									console.log(e)
+								}								
+							})        
+						}
+
+
+
                         const createItems = function(){
                             $scope.items.forEach(item => {
-                                let chartitem = $('<div>', {class: 'flowchart-item-wrapper'})
+                                let chartitem = $('<div>', {class: 'flowchart-item-wrapper',id:"fi_"+$scope.unique+'_'+ item.position})
                                 .css('grid-area',item.position)
                                 .appendTo("#flowchart_" + $scope.unique)
 
@@ -305,7 +459,9 @@ module.exports = function (RED) {
                                     
                             $("#flowchart_" + $scope.unique).css('grid-template-areas',areas)
                             $("#flowchart_" + $scope.unique).closest("md-card").css('padding','unset')
-                            
+
+							
+                           
                         }
 
                         const loadScript = function (id, path, done) {
@@ -316,6 +472,7 @@ module.exports = function (RED) {
 							script.src = path;
 							head.appendChild(script);							
 							script.onload = function () {
+								LeaderLine.positionByWindowResize = false;
 								done()
 							}
 						}
@@ -328,6 +485,8 @@ module.exports = function (RED) {
 			console.log(e);
 		}
 		node.on("close", function () {
+			console.log('close')
+						
 			if (done) {
 				done();
 			}
